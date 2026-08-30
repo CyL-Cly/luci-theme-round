@@ -2,7 +2,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-theme-round
 PKG_VERSION:=1.0.0
-PKG_RELEASE:=3
+PKG_RELEASE:=4
 
 PKG_MAINTAINER:=
 PKG_LICENSE:=Apache-2.0
@@ -44,6 +44,7 @@ define Package/luci-theme-round/install
 
 	$(INSTALL_DIR) $(1)/www/luci-static/resources/view/round
 	$(INSTALL_DATA) ./htdocs/luci-static/resources/view/round/sysauth.js $(1)/www/luci-static/resources/view/round/sysauth.js
+	$(INSTALL_DATA) ./htdocs/luci-static/resources/view/round/dashboard.js $(1)/www/luci-static/resources/view/round/dashboard.js
 
 	$(INSTALL_DIR) $(1)/usr/share/ucode/luci/template/themes/round
 	$(INSTALL_DATA) ./ucode/template/themes/round/header.ut $(1)/usr/share/ucode/luci/template/themes/round/header.ut

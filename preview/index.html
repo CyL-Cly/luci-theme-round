@@ -93,7 +93,124 @@
 						</ul>
 					</div>
 
-					<div class="cbi-map">
+						<div id="round-dashboard">
+							<div class="round-dash-gauges">
+								<article class="round-dash-card" data-gauge="load" data-level="ok">
+									<div class="round-dash-meta">
+										<div class="round-dash-label">负载</div>
+										<div class="round-dash-value">运行流畅</div>
+										<div class="round-dash-sub">0.04 / 0.08 / 0.03</div>
+									</div>
+									<div class="round-dash-ring">
+										<svg viewBox="0 0 120 120" aria-hidden="true">
+											<circle class="track" cx="60" cy="60" r="52"></circle>
+											<circle class="arc" cx="60" cy="60" r="52" stroke-dasharray="326.73" stroke-dashoffset="320.19"></circle>
+											<text class="pct" x="60" y="62">2%</text>
+										</svg>
+									</div>
+								</article>
+								<article class="round-dash-card" data-gauge="cpu" data-level="ok">
+									<div class="round-dash-meta">
+										<div class="round-dash-label">CPU</div>
+										<div class="round-dash-value">2 核心</div>
+									</div>
+									<div class="round-dash-ring">
+										<svg viewBox="0 0 120 120" aria-hidden="true">
+											<circle class="track" cx="60" cy="60" r="52"></circle>
+											<circle class="arc" cx="60" cy="60" r="52" stroke-dasharray="326.73" stroke-dashoffset="300.59"></circle>
+											<text class="pct" x="60" y="62">8%</text>
+										</svg>
+									</div>
+								</article>
+								<article class="round-dash-card" data-gauge="ram" data-level="ok">
+									<div class="round-dash-meta">
+										<div class="round-dash-label">RAM</div>
+										<div class="round-dash-value">537 MB / 1.86 GB</div>
+									</div>
+									<div class="round-dash-ring">
+										<svg viewBox="0 0 120 120" aria-hidden="true">
+											<circle class="track" cx="60" cy="60" r="52"></circle>
+											<circle class="arc" cx="60" cy="60" r="52" stroke-dasharray="326.73" stroke-dashoffset="235.24"></circle>
+											<text class="pct" x="60" y="62">28%</text>
+										</svg>
+									</div>
+								</article>
+								<article class="round-dash-card" data-gauge="disk" data-level="ok">
+									<div class="round-dash-meta">
+										<div class="round-dash-label">/</div>
+										<div class="round-dash-value">13.0 GB / 57.1 GB</div>
+									</div>
+									<div class="round-dash-ring">
+										<svg viewBox="0 0 120 120" aria-hidden="true">
+											<circle class="track" cx="60" cy="60" r="52"></circle>
+											<circle class="arc" cx="60" cy="60" r="52" stroke-dasharray="326.73" stroke-dashoffset="251.58"></circle>
+											<text class="pct" x="60" y="62">23%</text>
+										</svg>
+									</div>
+								</article>
+							</div>
+							<div class="round-dash-body">
+								<section class="round-dash-panel round-dash-overview">
+									<h3>概述</h3>
+									<div class="round-dash-overview-grid">
+										<div class="round-dash-ov-cell" data-ov="wan">
+											<div class="round-dash-ov-title">WAN</div>
+											<div class="round-dash-ov-value">已连接</div>
+											<div class="round-dash-ov-sub">10.0.0.86/24</div>
+										</div>
+										<div class="round-dash-ov-cell" data-ov="lan">
+											<div class="round-dash-ov-title">LAN</div>
+											<div class="round-dash-ov-value">192.168.1.1/24</div>
+											<div class="round-dash-ov-sub">br-lan</div>
+										</div>
+										<div class="round-dash-ov-cell" data-ov="wifi">
+											<div class="round-dash-ov-title">无线</div>
+											<div class="round-dash-ov-value">ImmortalWrt</div>
+											<div class="round-dash-ov-sub">客户端: 3</div>
+										</div>
+										<div class="round-dash-ov-cell" data-ov="dhcp">
+											<div class="round-dash-ov-title">DHCP</div>
+											<div class="round-dash-ov-value">租约: 4</div>
+											<div class="round-dash-ov-sub">DHCP</div>
+										</div>
+									</div>
+								</section>
+								<section class="round-dash-panel round-dash-traffic">
+									<header class="round-dash-traffic-head">
+										<h3>流量</h3>
+										<select id="round-dash-iface" aria-label="接口">
+											<option value="all" selected>全部</option>
+											<option value="wan">wan</option>
+											<option value="br-lan">br-lan</option>
+											<option value="wlan0">wlan0</option>
+										</select>
+									</header>
+									<div class="round-dash-traffic-stats">
+										<div class="round-dash-stat tx"><span class="k">上行</span><span class="v">839.68 B/s</span></div>
+										<div class="round-dash-stat rx"><span class="k">下行</span><span class="v">983.04 B/s</span></div>
+										<div class="round-dash-stat"><span class="k">总发送</span><span class="v">4.62 GB</span></div>
+										<div class="round-dash-stat"><span class="k">总接收</span><span class="v">5.61 GB</span></div>
+									</div>
+									<div class="round-dash-chart">
+										<svg viewBox="0 0 640 220" preserveAspectRatio="none" class="round-dash-svg">
+											<g class="grid">
+												<line x1="8" x2="632" y1="12" y2="12"></line>
+												<line x1="8" x2="632" y1="64.5" y2="64.5"></line>
+												<line x1="8" x2="632" y1="117" y2="117"></line>
+												<line x1="8" x2="632" y1="169.5" y2="169.5"></line>
+												<line x1="8" x2="632" y1="210" y2="210"></line>
+											</g>
+											<path class="fill rx" d="M8,210 L8,140 L96,132 L184,138 L272,90 L360,48 L448,118 L536,128 L632,122 L632,210 Z"></path>
+											<path class="fill tx" d="M8,210 L8,148 L96,152 L184,156 L272,108 L360,62 L448,132 L536,148 L632,140 L632,210 Z"></path>
+											<polyline class="line rx" points="8,140 96,132 184,138 272,90 360,48 448,118 536,128 632,122"></polyline>
+											<polyline class="line tx" points="8,148 96,152 184,156 272,108 360,62 448,132 536,148 632,140"></polyline>
+										</svg>
+									</div>
+								</section>
+							</div>
+						</div>
+
+						<div class="cbi-map">
 						<h2>状态</h2>
 						<p class="cbi-map-descr">系统运行信息与接口摘要。</p>
 						<div class="cbi-section">

@@ -27,6 +27,7 @@ rm -rf /tmp/luci-modulecache
 
 ## 外观
 
+- 状态概览页顶部叠加环形仪表、概述卡和网卡流量图（原表格保留）
 - 浅色默认，侧栏按钮切换深色（`localStorage['luci-theme-round']`，未手动选过则跟随系统）
 - 200px 玻璃侧栏、14px 卡片圆角、青蓝→电青主按钮
 - 汉堡可把侧栏收到左侧（桌面偏好写入 `localStorage['luci-theme-round-sidebar']`）；窄屏（≤768px）汉堡 + 遮罩滑出菜单

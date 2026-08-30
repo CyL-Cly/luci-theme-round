@@ -68,6 +68,8 @@ return baseclass.extend({
 	__init__() {
 		bindThemeToggle();
 		ui.menu.load().then((tree) => this.render(tree));
+		if (document.body.getAttribute('data-page') === 'admin-status-overview')
+			L.require('view.round.dashboard');
 	},
 
 	render(tree) {

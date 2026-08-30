@@ -84,4 +84,31 @@
 	.modal {
 		width: calc(100% - 24px);
 	}
+
+	.round-dash-gauges,
+	.round-dash-body,
+	.round-dash-overview-grid,
+	.round-dash-traffic-stats {
+		grid-template-columns: 1fr;
+	}
+
+	.round-dash-ov-cell + .round-dash-ov-cell {
+		padding-left: 0;
+		border-left: 0;
+		padding-top: 14px;
+	}
+
+	.round-dash-card {
+		min-height: 112px;
+		padding: 14px 16px;
+	}
+
+	.round-dash-ring svg {
+		width: 88px;
+		height: 88px;
+	}
+
+	.round-dash-chart {
+		height: 180px;
+	}
 }
