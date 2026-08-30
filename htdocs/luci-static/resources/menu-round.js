@@ -3,6 +3,7 @@
 'require ui';
 
 const STORAGE_KEY = 'luci-theme-round';
+const SIDEBAR_KEY = 'luci-theme-round-sidebar';
 const MOBILE_BP = 768;
 
 function currentTheme() {
@@ -90,7 +91,7 @@ return baseclass.extend({
 		if (showSide)
 			showSide.addEventListener('click', ui.createHandlerFn(this, 'handleSidebarToggle'));
 		if (darkMask)
-			darkMask.addEventListener('click', ui.createHandlerFn(this, 'handleSidebarToggle'));
+			darkMask.addEventListener('click', ui.createHandlerFn(this, 'handleSidebarMask'));
 
 		const loading = document.querySelector('.main > .loading');
 		if (loading) {
@@ -100,6 +101,8 @@ return baseclass.extend({
 
 		if (window.innerWidth <= MOBILE_BP)
 			this.setSidebarOpen(false);
+		else
+			this.setDesktopCollapsed(this.readDesktopCollapsed());
 
 		window.addEventListener('resize', ui.createHandlerFn(this, 'handleSidebarResize'));
 	},
@@ -138,6 +141,9 @@ return baseclass.extend({
 			return E([]);
 
 		children.forEach(child => {
+			if (child.name === 'logout')
+				return;
+
 			const submenu = this.renderMainMenu(child, url + '/' + child.name, l);
 			const isActive = (L.env.dispatchpath[l] == child.name);
 			const hasChildren = submenu.children.length;
@@ -157,8 +163,11 @@ return baseclass.extend({
 
 		if (l == 1) {
 			const container = document.querySelector('#mainmenu');
+			const footer = container.querySelector('.sidebar-footer');
 			const toggle = document.getElementById('theme-toggle');
-			if (toggle)
+			if (footer)
+				container.insertBefore(ul, footer);
+			else if (toggle)
 				container.insertBefore(ul, toggle);
 			else
 				container.appendChild(ul);
@@ -253,11 +262,36 @@ return baseclass.extend({
 			mainRight.style['overflow-y'] = open && window.innerWidth <= MOBILE_BP ? 'hidden' : '';
 	},
 
+	readDesktopCollapsed() {
+		try {
+			return localStorage.getItem(SIDEBAR_KEY) === 'collapsed';
+		} catch (e) {
+			return false;
+		}
+	},
+
+	setDesktopCollapsed(collapsed) {
+		document.body.classList.toggle('sidebar-collapsed', collapsed);
+		try {
+			localStorage.setItem(SIDEBAR_KEY, collapsed ? 'collapsed' : 'open');
+		} catch (e) { /* private mode */ }
+	},
+
 	handleSidebarToggle(ev) {
 		if (window.innerWidth > MOBILE_BP)
-			return;
+			this.setDesktopCollapsed(!document.body.classList.contains('sidebar-collapsed'));
+		else
+			this.setSidebarOpen(!document.body.classList.contains('sidebar-open'));
 
-		this.setSidebarOpen(!document.body.classList.contains('sidebar-open'));
+		if (ev) {
+			ev.preventDefault();
+			ev.stopPropagation();
+		}
+	},
+
+	handleSidebarMask(ev) {
+		if (window.innerWidth <= MOBILE_BP)
+			this.setSidebarOpen(false);
 
 		if (ev) {
 			ev.preventDefault();
@@ -266,7 +300,9 @@ return baseclass.extend({
 	},
 
 	handleSidebarResize() {
-		if (window.innerWidth > MOBILE_BP)
+		if (window.innerWidth > MOBILE_BP) {
 			this.setSidebarOpen(false);
+			this.setDesktopCollapsed(this.readDesktopCollapsed());
+		}
 	}
 });
