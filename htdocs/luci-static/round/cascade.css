@@ -34,6 +34,7 @@
 		radial-gradient(700px 380px at 100% 0%, rgba(18, 196, 176, 0.14), transparent 55%),
 		linear-gradient(180deg, #f4f9fd 0%, var(--bg-base) 45%, #e9f1f8 100%);
 	--grid-line: rgba(20, 150, 255, 0.045);
+	--chart-bg: #f6fafd;
 	--aside-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(244, 250, 255, 0.9));
 	--header-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(244, 250, 255, 0.9));
 	--nav-hover-border: rgba(20, 150, 255, 0.15);
@@ -90,6 +91,7 @@
 		radial-gradient(700px 380px at 100% 0%, rgba(45, 212, 191, 0.12), transparent 55%),
 		linear-gradient(180deg, #0d1a2a 0%, var(--bg-base) 45%, #09131e 100%);
 	--grid-line: rgba(56, 176, 255, 0.05);
+	--chart-bg: #0d1a2a;
 	--aside-bg: linear-gradient(180deg, rgba(14, 24, 38, 0.92), rgba(10, 20, 33, 0.9));
 	--header-bg: linear-gradient(180deg, rgba(14, 24, 38, 0.94), rgba(10, 20, 33, 0.9));
 	--nav-hover-border: rgba(56, 176, 255, 0.2);
@@ -1093,6 +1095,7 @@ body.modal-overlay-active .modal-overlay {
 .modal {
 	position: relative;
 	z-index: 1001;
+	margin: 5em auto;
 	background: var(--modal-grad);
 	border-radius: 16px;
 	border: 1px solid var(--line);
@@ -1738,4 +1741,21 @@ body.node-status-overview #maincontent > .container {
 		padding-left: 0;
 		border-left: 0;
 	}
+}
+
+/* ---------- Realtime graphs (mod-status): override hardcoded white bg ---------- */
+/* mod-status JS inlines background:#fff;border:1px solid #000 on the chart div;
+   mirror bootstrap cascade.css and beat it with !important. */
+#view div[style] > svg {
+	background: var(--chart-bg) !important;
+	border: 1px solid var(--line-strong) !important;
+}
+
+#view div[style] > svg line[style] {
+	stroke: var(--text-muted) !important;
+}
+
+#view div[style] > svg text[style] {
+	fill: var(--text-secondary) !important;
+	text-shadow: none;
 }
