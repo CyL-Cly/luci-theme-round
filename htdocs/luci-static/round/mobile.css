@@ -85,6 +85,113 @@
 		width: calc(100% - 24px);
 	}
 
+	/* responsive table folding (official mobile.css pattern) */
+	.table {
+		display: flex;
+		flex-direction: column;
+		width: 100%;
+	}
+
+	.tr {
+		display: flex;
+		flex-direction: row;
+		flex-wrap: wrap;
+		align-items: flex-end;
+		border-top: 1px solid var(--line);
+		padding: 5px 0;
+		margin: 0 -3px;
+	}
+
+	.table .th,
+	.table .td,
+	.table .tr::before {
+		flex: 1 1 50%;
+		align-self: flex-start;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		word-wrap: break-word;
+		display: inline-block;
+		border-top: none;
+		padding: 3px;
+		box-sizing: border-box;
+	}
+
+	.table .td.cbi-dropdown-open {
+		overflow: visible;
+	}
+
+	.td[data-widget="button"],
+	.td[data-widget="fvalue"] {
+		flex: 1 1 17%;
+		text-align: left;
+	}
+
+	.td.cbi-value-field {
+		align-self: flex-start;
+		flex-basis: 100%;
+		margin-bottom: .3em;
+	}
+
+	.td.cbi-value-field .cbi-button {
+		width: 100%;
+	}
+
+	.table.cbi-section-table {
+		border: none;
+		background: none;
+		margin: 0;
+	}
+
+	.tr.table-titles,
+	.cbi-section-table-titles,
+	.cbi-section-table-descr {
+		display: none;
+	}
+
+	.cbi-section-table-row {
+		display: flex;
+		flex-direction: row;
+		flex-wrap: wrap;
+		margin: 0 0 .5em 0;
+	}
+
+	.cbi-section-table + .cbi-section-create {
+		padding-top: 0;
+	}
+
+	.tr[data-title]::before {
+		display: block;
+		flex: 1 1 100%;
+		background: var(--row-even) !important;
+		font-size: 16px;
+		border-bottom: 1px solid var(--line);
+	}
+
+	.td[data-title]::before {
+		content: attr(data-title);
+		font-weight: bold;
+		display: block;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: pre-line;
+	}
+
+	.td[data-title] ~ .td.cbi-section-actions {
+		align-self: flex-start;
+	}
+
+	.td.cbi-section-actions {
+		overflow: initial;
+		max-width: 100%;
+		padding: 3px 2px;
+		flex-basis: 100%;
+	}
+
+	.hide-sm,
+	.hide-xs {
+		display: none !important;
+	}
+
 	.round-dash-gauges,
 	.round-dash-body,
 	.round-dash-overview-grid,
