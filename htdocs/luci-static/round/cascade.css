@@ -365,6 +365,13 @@ header .status {
 	justify-content: center;
 	background: var(--body-grad);
 	transition: opacity 0.3s, visibility 0.3s;
+	pointer-events: none;
+}
+
+.loading[style*="hidden"],
+.loading[style*="opacity: 0"],
+.loading[style*="opacity:0"] {
+	display: none;
 }
 
 .loading span {
@@ -1009,13 +1016,27 @@ tbody tr:hover,
 .modal-overlay {
 	position: fixed;
 	inset: 0;
-	z-index: 1000;
-	display: flex;
-	align-items: center;
-	justify-content: center;
+	z-index: 900;
+	overflow: auto;
 	background: var(--modal-mask);
 	backdrop-filter: blur(4px);
 	-webkit-backdrop-filter: blur(4px);
+	opacity: 0;
+	visibility: hidden;
+	pointer-events: none;
+	transition: opacity .125s ease-in, visibility .125s ease-in;
+}
+
+body.modal-overlay-active {
+	overflow: hidden;
+	height: 100vh;
+}
+
+body.modal-overlay-active #modal_overlay,
+body.modal-overlay-active .modal-overlay {
+	opacity: 1;
+	visibility: visible;
+	pointer-events: auto;
 }
 
 .modal {
@@ -1086,10 +1107,6 @@ tbody tr:hover,
 	width: calc(100% - 32px);
 	margin: 8px 16px 4px;
 	padding: 10px 16px;
-}
-
-body.modal-overlay-active {
-	overflow: hidden;
 }
 
 .cbi-dropdown {
