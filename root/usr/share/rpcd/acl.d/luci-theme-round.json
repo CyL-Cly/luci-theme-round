@@ -1,0 +1,17 @@
+{
+	"luci-theme-round": {
+		"description": "Grant dashboard stats for luci-theme-round",
+		"read": {
+			"ubus": {
+				"file": [ "read" ],
+				"system": [ "info" ],
+				"luci": [ "getMountPoints" ],
+				"luci-rpc": [ "getDHCPLeases", "getNetworkDevices" ],
+				"network.device": [ "status" ]
+			},
+			"file": {
+				"/proc/stat": [ "read" ]
+			}
+		}
+	}
+}

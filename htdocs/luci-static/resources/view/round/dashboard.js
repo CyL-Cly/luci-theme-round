@@ -13,19 +13,29 @@ const SKIP_IFACE = /^(lo|ifb\d*|teql\d*|sit\d*|gre\d*|gretap\d*|erspan\d*|dummy\
 
 const callSystemInfo = rpc.declare({
 	object: 'system',
-	method: 'info',
-	expect: { '': {} }
+	method: 'info'
 });
 
 const callDevStatus = rpc.declare({
 	object: 'network.device',
-	method: 'status',
-	expect: { '': {} }
+	method: 'status'
 });
 
 const callDhcpLeases = rpc.declare({
 	object: 'luci-rpc',
 	method: 'getDHCPLeases',
+	expect: { '': {} }
+});
+
+const callMountPoints = rpc.declare({
+	object: 'luci',
+	method: 'getMountPoints',
+	expect: { result: [] }
+});
+
+const callNetworkDevices = rpc.declare({
+	object: 'luci-rpc',
+	method: 'getNetworkDevices',
 	expect: { '': {} }
 });
 
@@ -87,14 +97,20 @@ function cpuFromStat(line) {
 function addrsOf(net) {
 	if (!net)
 		return [];
-	const fn = net.getIPAddrs || net.getIPv4Addrs;
-	if (typeof fn !== 'function')
-		return [];
 	try {
-		const addrs = fn.call(net);
-		return Array.isArray(addrs) ? addrs.filter(Boolean) : [];
+		if (typeof net.getIPAddrs === 'function') {
+			const addrs = net.getIPAddrs();
+			return Array.isArray(addrs) ? addrs.filter(Boolean) : [];
+		}
+	} catch (e) { /* ignore */ }
+	return [];
+}
+
+function settled(value, fallback) {
+	try {
+		return Promise.resolve(value).then((v) => (v == null ? fallback : v), () => fallback);
 	} catch (e) {
-		return [];
+		return Promise.resolve(fallback);
 	}
 }
 
@@ -132,7 +148,7 @@ return baseclass.extend({
 		return dash;
 	},
 
-	buildRing(key) {
+	buildRing(key, label) {
 		const arc = svg('circle', {
 			'class': 'arc',
 			cx: '60',
@@ -146,7 +162,7 @@ return baseclass.extend({
 
 		return E('article', { 'class': 'round-dash-card', 'data-gauge': key, 'data-level': 'ok' }, [
 			E('div', { 'class': 'round-dash-meta' }, [
-				E('div', { 'class': 'round-dash-label' }),
+				E('div', { 'class': 'round-dash-label' }, label),
 				E('div', { 'class': 'round-dash-value' }, '—'),
 				E('div', { 'class': 'round-dash-sub' }, '—')
 			]),
@@ -192,10 +208,10 @@ return baseclass.extend({
 
 		return E('div', { id: 'round-dashboard' }, [
 			E('div', { 'class': 'round-dash-gauges' }, [
-				this.buildRing('load'),
-				this.buildRing('cpu'),
-				this.buildRing('ram'),
-				this.buildRing('disk')
+				this.buildRing('load', _('Load')),
+				this.buildRing('cpu', 'CPU'),
+				this.buildRing('ram', 'RAM'),
+				this.buildRing('disk', '/')
 			]),
 			E('div', { 'class': 'round-dash-body' }, [
 				E('section', { 'class': 'round-dash-panel round-dash-overview' }, [
@@ -288,15 +304,16 @@ return baseclass.extend({
 		return { all, listed };
 	},
 
-	sumStats(devs) {
-		let rx = 0, tx = 0;
-		for (const name in devs) {
-			const st = devs[name] && (devs[name].statistics || {});
-			rx += Number(st.rx_bytes) || 0;
-			tx += Number(st.tx_bytes) || 0;
-		}
-		return { rx, tx };
-	},
+		sumStats(devs) {
+			let rx = 0, tx = 0;
+			for (const name in devs) {
+				const d = devs[name] || {};
+				const st = d.statistics || d.stats || {};
+				rx += Number(st.rx_bytes) || 0;
+				tx += Number(st.tx_bytes) || 0;
+			}
+			return { rx, tx };
+		},
 
 	pickStats(devs, iface) {
 		const counted = this.countable(devs);
@@ -380,9 +397,16 @@ return baseclass.extend({
 	},
 
 	async readCpu() {
-		const lines = await L.resolveDefault(fs.lines('/proc/stat'), []);
+		const raw = await L.resolveDefault(fs.read('/proc/stat'), '');
+		const lines = String(raw || '').split(/\n/);
 		const now = cpuFromStat(lines[0]);
-		const cores = lines.filter((l) => /^cpu\d+/.test(l)).length || 1;
+		let cores = 0;
+		for (let i = 0; i < lines.length; i++) {
+			if (/^cpu\d+/.test(lines[i]))
+				cores++;
+		}
+		if (!cores)
+			cores = 1;
 
 		let pct = 0;
 		if (now && this.prevCpu && now.total > this.prevCpu.total) {
@@ -396,6 +420,8 @@ return baseclass.extend({
 
 	async readWifi() {
 		try {
+			if (!network || typeof network.getWifiNetworks !== 'function')
+				return { ssid: '—', count: '—' };
 			const nets = await L.resolveDefault(network.getWifiNetworks(), []);
 			const active = (nets || []).filter((n) => {
 				try {
@@ -431,32 +457,86 @@ return baseclass.extend({
 		}
 	},
 
-	async readDisk() {
-		if (typeof fs.statvfs === 'function') {
-			const disk = await L.resolveDefault(fs.statvfs('/'), null);
-			if (disk && disk.blocks) {
-				const fr = Number(disk.frsize) || 0;
-				return {
-					total: Number(disk.blocks) * fr,
-					used: (Number(disk.blocks) - Number(disk.bfree)) * fr
-				};
+	async readDisk(info) {
+		const root = info && info.root;
+		if (root && Number(root.total) > 0) {
+			return {
+				total: Number(root.total) * 1024,
+				used: Number(root.used) * 1024
+			};
+		}
+
+		const mounts = await L.resolveDefault(callMountPoints(), []);
+		if (Array.isArray(mounts)) {
+			let hit = null;
+			for (let i = 0; i < mounts.length; i++) {
+				if (mounts[i] && mounts[i].mount === '/') {
+					hit = mounts[i];
+					break;
+				}
+			}
+			if (!hit && mounts[0])
+				hit = mounts[0];
+			if (hit && Number(hit.size) > 0) {
+				const total = Number(hit.size);
+				const free = Number(hit.free) || 0;
+				return { total, used: Math.max(0, total - free) };
 			}
 		}
 
-		try {
-			const res = await L.resolveDefault(fs.exec('/bin/df', ['-Pk', '/']), null);
-			const stdout = (res && (res.stdout || res)) || '';
-			const line = String(stdout).trim().split(/\n/).pop() || '';
-			const parts = line.split(/\s+/);
-			if (parts.length >= 4) {
-				return {
-					total: (parseInt(parts[1], 10) || 0) * 1024,
-					used: (parseInt(parts[2], 10) || 0) * 1024
-				};
-			}
-		} catch (e) { /* ignore */ }
-
 		return { total: 0, used: 0 };
+	},
+
+	looksLikeDevs(devs) {
+		if (!devs || typeof devs !== 'object' || Array.isArray(devs))
+			return false;
+		for (const name in devs) {
+			const d = devs[name];
+			if (d && typeof d === 'object' && (d.statistics || d.stats || d.type || d.up != null))
+				return true;
+		}
+		return false;
+	},
+
+	unwrapDevs(raw) {
+		if (this.looksLikeDevs(raw))
+			return raw;
+		if (raw && typeof raw === 'object') {
+			if (this.looksLikeDevs(raw.values))
+				return raw.values;
+			if (this.looksLikeDevs(raw.devices))
+				return raw.devices;
+		}
+		return null;
+	},
+
+	async readDevs() {
+		return this.unwrapDevs(await settled(callDevStatus(), {}))
+			|| this.unwrapDevs(await settled(callNetworkDevices(), {}))
+			|| {};
+	},
+
+	async readLan() {
+		try {
+			if (!network || typeof network.getNetwork !== 'function')
+				return null;
+			const lan = await L.resolveDefault(network.getNetwork('lan'), null);
+			if (lan)
+				return lan;
+			if (typeof network.getNetworks !== 'function')
+				return null;
+			const nets = await L.resolveDefault(network.getNetworks(), []);
+			for (let i = 0; i < (nets || []).length; i++) {
+				const n = nets[i];
+				try {
+					if (n && typeof n.isWAN === 'function' && !n.isWAN())
+						return n;
+				} catch (e) { /* ignore */ }
+			}
+			return (nets && nets[0]) || null;
+		} catch (e) {
+			return null;
+		}
 	},
 
 	async tick() {
@@ -466,7 +546,7 @@ return baseclass.extend({
 		try {
 			await this.refresh();
 		} catch (e) {
-			/* keep last frame */
+			console.error('round-dashboard', e);
 		} finally {
 			this.busy = false;
 		}
@@ -474,18 +554,21 @@ return baseclass.extend({
 
 	async refresh() {
 		const now = Date.now();
-		const [info, cpu, disk, devs, wans, lans, leases, wifi] = await Promise.all([
-			L.resolveDefault(callSystemInfo(), {}),
+		const wanP = (network && typeof network.getWANNetworks === 'function')
+			? network.getWANNetworks()
+			: [];
+		const [info, cpu, devs, wans, lan, leases, wifi] = await Promise.all([
+			settled(callSystemInfo(), {}),
 			this.readCpu(),
-			this.readDisk(),
-			L.resolveDefault(callDevStatus(), {}),
-			L.resolveDefault(network.getWANNetworks(), []),
-			L.resolveDefault(network.getLANNetworks(), []),
-			L.resolveDefault(callDhcpLeases(), null),
+			this.readDevs(),
+			settled(wanP, []),
+			this.readLan(),
+			settled(callDhcpLeases(), null),
 			this.readWifi()
 		]);
 
-		const loadRaw = (info.load || [0, 0, 0]).map((v) => (Number(v) || 0) / 65536);
+		const sys = info || {};
+		const loadRaw = (sys.load || [0, 0, 0]).map((v) => (Number(v) || 0) / 65535);
 		const perCore = loadRaw[0] / (cpu.cores || 1);
 		const loadPct = clampPct(perCore * 100);
 		const loadTxt = loadRaw.map((v) => v.toFixed(2)).join(' / ');
@@ -493,12 +576,13 @@ return baseclass.extend({
 			perCore < 1 ? _('Normal load') : _('High load')
 		);
 
-		const mem = info.memory || {};
+		const mem = sys.memory || {};
 		const memTotal = Number(mem.total) || 0;
-		const memAvail = Number(mem.available != null ? mem.available : mem.free) || 0;
-		const memUsed = Math.max(0, memTotal - memAvail);
+		const memAvail = Number(mem.available != null ? mem.available : ((Number(mem.free) || 0) + (Number(mem.buffered) || 0)));
+		const memUsed = memTotal ? Math.max(0, memTotal - memAvail) : 0;
 		const memPct = memTotal ? (memUsed / memTotal) * 100 : 0;
 
+		const disk = await this.readDisk(sys);
 		const diskUsed = (disk && disk.used) || 0;
 		const diskTotal = (disk && disk.total) || 0;
 		const diskPct = diskTotal ? (diskUsed / diskTotal) * 100 : 0;
@@ -509,7 +593,6 @@ return baseclass.extend({
 		this.setGauge('disk', '/', '%s / %s'.format(fmtBytes(diskUsed), fmtBytes(diskTotal)), '', diskPct);
 
 		const wan = (wans || [])[0];
-		const lan = (lans || [])[0];
 		const wanAddrs = addrsOf(wan);
 		const lanAddrs = addrsOf(lan);
 		const wanUp = wan && typeof wan.isUp === 'function' ? wan.isUp() : !!wanAddrs.length;
@@ -519,9 +602,9 @@ return baseclass.extend({
 
 		let leaseCount = '—';
 		if (leases) {
-			const v4 = leases.dhcp_leases || [];
-			const v6 = leases.dhcp6_leases || [];
-			leaseCount = '%d'.format((Array.isArray(v4) ? v4.length : 0) + (Array.isArray(v6) ? v6.length : 0));
+			const v4 = Array.isArray(leases.dhcp_leases) ? leases.dhcp_leases : [];
+			const v6 = Array.isArray(leases.dhcp6_leases) ? leases.dhcp6_leases : [];
+			leaseCount = '%d'.format(v4.length + v6.length);
 		}
 		this.setOverview('dhcp', leaseCount === '—' ? '—' : _('Leases: %s').format(leaseCount), 'DHCP');
 

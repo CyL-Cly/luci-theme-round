@@ -2,7 +2,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-theme-round
 PKG_VERSION:=1.0.0
-PKG_RELEASE:=4
+PKG_RELEASE:=5
 
 PKG_MAINTAINER:=
 PKG_LICENSE:=Apache-2.0
@@ -53,12 +53,16 @@ define Package/luci-theme-round/install
 
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
 	$(INSTALL_BIN) ./root/etc/uci-defaults/30_luci-theme-round $(1)/etc/uci-defaults/30_luci-theme-round
+
+	$(INSTALL_DIR) $(1)/usr/share/rpcd/acl.d
+	$(INSTALL_DATA) ./root/usr/share/rpcd/acl.d/luci-theme-round.json $(1)/usr/share/rpcd/acl.d/luci-theme-round.json
 endef
 
 define Package/luci-theme-round/postinst
 #!/bin/sh
 [ -n "$${IPKG_INSTROOT}" ] || {
 	rm -f /tmp/luci-indexcache /tmp/luci-modulecache/* 2>/dev/null
+	/etc/init.d/rpcd reload >/dev/null 2>&1 || true
 }
 exit 0
 endef
