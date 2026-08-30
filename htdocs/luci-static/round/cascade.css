@@ -690,6 +690,31 @@ footer a {
 	margin-bottom: -1px;
 }
 
+.cbi-tabmenu > li,
+.cbi-tabmenu > li > a {
+	cursor: pointer;
+}
+
+[data-tab-title] {
+	height: 0;
+	opacity: 0;
+	overflow: hidden;
+}
+
+[data-tab-active="true"] {
+	opacity: 1;
+	height: auto;
+	overflow: visible;
+	transition: opacity .25s ease-in;
+}
+
+.cbi-section-node-tabbed {
+	padding: 0;
+	border: 0;
+	box-shadow: none;
+	background: transparent;
+}
+
 /* ---------- Cards / CBI ---------- */
 .cbi-map {
 	margin-bottom: 16px;
@@ -1037,8 +1062,6 @@ tbody tr:hover,
 
 /* ---------- Badges / labels ---------- */
 .label,
-.ifacebadge,
-.zonebadge,
 .badge {
 	display: inline-flex;
 	align-items: center;
@@ -1059,9 +1082,56 @@ tbody tr:hover,
 .label.notice,
 .label.info { background: var(--info-soft); color: var(--nav-active-text); border-color: rgba(20, 150, 255, 0.3); }
 
-.ifacebadge,
-.zonebadge {
+.ifacebadge {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	padding: 2px 6px;
+	border-radius: var(--radius-sm);
+	border: 1px solid var(--line);
+	background: var(--bg-input);
+	font-size: 12px;
+	font-weight: 600;
+	line-height: 1.3;
+	white-space: nowrap;
 	box-shadow: var(--shadow-sm);
+}
+
+.ifacebadge img {
+	width: 16px;
+	height: 16px;
+	vertical-align: middle;
+}
+
+.ifacebadge.large img {
+	width: 32px;
+	height: 32px;
+}
+
+.zonebadge {
+	display: inline-flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 4px;
+	padding: 4px 8px;
+	border-radius: var(--radius-sm);
+	white-space: nowrap;
+	box-shadow: var(--shadow-sm);
+}
+
+.zonebadge > .ifacebadge {
+	margin: 0;
+}
+
+.zonebadge-empty {
+	border: 1px dashed var(--line-strong);
+	color: var(--text-muted);
+	font-style: italic;
+}
+
+:root[data-darkmode="true"] .zonebadge[style],
+:root[data-darkmode="true"] .ifacebox-head[style] {
+	background: linear-gradient(rgba(0,0,0,.28), rgba(0,0,0,.18)) !important;
 }
 
 /* ---------- Modal ---------- */
@@ -1410,9 +1480,30 @@ body.node-main-login #view {
 .center, .text-center { text-align: center; }
 .pull-right { margin-left: auto; }
 
-.cbi-tooltip,
-[data-tooltip]::after {
+.cbi-tooltip-container {
+	cursor: help;
+	position: relative;
+}
+
+.cbi-tooltip {
+	position: absolute;
+	z-index: 1000;
+	left: -10000px;
+	opacity: 0;
+	padding: 6px 10px;
 	border-radius: 8px;
+	background: var(--bg-panel);
+	border: 1px solid var(--line);
+	box-shadow: var(--shadow);
+	color: var(--text);
+	white-space: pre;
+	pointer-events: none;
+	transition: opacity .2s ease-in;
+}
+
+.cbi-tooltip-container:hover .cbi-tooltip:not(:empty) {
+	left: auto;
+	opacity: 1;
 }
 
 .cbi-dropdown[open] {
@@ -1438,6 +1529,9 @@ body.node-main-login #view {
 
 /* keepalive / luci2 widgets */
 .ifacebox {
+	display: inline-flex;
+	flex-direction: column;
+	min-width: 70px;
 	border-radius: var(--radius-sm);
 	border: 1px solid var(--line);
 	overflow: hidden;
@@ -1451,6 +1545,70 @@ body.node-main-login #view {
 .ifacebox-body {
 	padding: 8px 10px;
 	background: var(--bg-panel);
+	overflow: hidden;
+}
+
+/* firewall zone forwards */
+.zone-forwards {
+	display: flex;
+	flex-wrap: nowrap;
+	align-items: center;
+	gap: 8px;
+}
+
+.zone-forwards > * {
+	flex: 1 1 40%;
+}
+
+.zone-forwards > span {
+	flex-basis: 10%;
+	text-align: center;
+}
+
+.zone-forwards .zone-src,
+.zone-forwards .zone-dest {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+/* network status port cards */
+.network-status-table {
+	display: flex;
+	flex-wrap: wrap;
+}
+
+.network-status-table .ifacebox {
+	margin: .5em;
+	flex-grow: 1;
+}
+
+.network-status-table .ifacebox-body {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	text-align: left;
+}
+
+.network-status-table .ifacebox-body .ifacebadge {
+	display: flex;
+	flex: 1;
+	min-width: 220px;
+	white-space: normal;
+}
+
+/* section action buttons */
+.td.cbi-section-actions {
+	text-align: right;
+	white-space: nowrap;
+	width: 1%;
+}
+
+.td.cbi-section-actions > * {
+	display: inline-flex;
+	flex-wrap: wrap;
+	gap: 4px;
+	justify-content: flex-end;
 }
 
 /* ---------- Overview dashboard ---------- */
