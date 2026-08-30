@@ -1,0 +1,87 @@
+@media (max-width: 768px) {
+	.showSide {
+		display: inline-block;
+	}
+
+	header .container {
+		padding: 0 10px;
+	}
+
+	.main {
+		display: block;
+	}
+
+	.main-left {
+		position: fixed;
+		top: var(--header-h);
+		left: 0;
+		bottom: 0;
+		height: auto;
+		width: min(var(--sidebar-w), 84vw);
+		transform: translateX(-110%);
+		transition: transform 0.25s ease;
+		box-shadow: none;
+		z-index: 50;
+	}
+
+	body.sidebar-open .main-left {
+		transform: translateX(0);
+		box-shadow: var(--modal-shadow);
+	}
+
+	.darkMask {
+		display: block;
+		position: fixed;
+		inset: 0;
+		background: var(--modal-mask);
+		backdrop-filter: blur(4px);
+		-webkit-backdrop-filter: blur(4px);
+		z-index: 45;
+		opacity: 0;
+		visibility: hidden;
+		transition: opacity 0.25s, visibility 0.25s;
+	}
+
+	.main-right {
+		padding: 14px 12px 24px;
+		margin-left: 0;
+	}
+
+	.cbi-value {
+		display: block;
+	}
+
+	.cbi-value-title {
+		flex: none;
+		padding-top: 0;
+		margin-bottom: 6px;
+	}
+
+	.cbi-map,
+	.cbi-section,
+	fieldset {
+		padding: 16px;
+	}
+
+	input[type="text"],
+	input[type="password"],
+	input[type="number"],
+	select,
+	textarea {
+		max-width: none;
+	}
+
+	.cbi-page-actions {
+		position: static;
+	}
+
+	.tabs,
+	.cbi-tabmenu {
+		overflow-x: auto;
+		flex-wrap: nowrap;
+	}
+
+	.modal {
+		width: calc(100% - 24px);
+	}
+}
