@@ -1506,6 +1506,10 @@ body.node-main-login #view {
 	opacity: 1;
 }
 
+.network-status-table .ifacebox:hover {
+	z-index: 1000;
+}
+
 .cbi-dropdown[open] {
 	border-color: var(--input-focus-border);
 }
@@ -1534,18 +1538,23 @@ body.node-main-login #view {
 	min-width: 70px;
 	border-radius: var(--radius-sm);
 	border: 1px solid var(--line);
-	overflow: hidden;
+}
+
+.ifacebox:hover {
+	position: relative;
+	z-index: 1000;
 }
 
 .ifacebox-head {
 	padding: 6px 10px;
 	font-weight: 600;
+	border-radius: calc(var(--radius-sm) - 1px) calc(var(--radius-sm) - 1px) 0 0;
 }
 
 .ifacebox-body {
 	padding: 8px 10px;
 	background: var(--bg-panel);
-	overflow: hidden;
+	border-radius: 0 0 calc(var(--radius-sm) - 1px) calc(var(--radius-sm) - 1px);
 }
 
 /* firewall zone forwards */
