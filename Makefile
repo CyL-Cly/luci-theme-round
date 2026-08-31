@@ -2,7 +2,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-theme-round
 PKG_VERSION:=1.0.0
-PKG_RELEASE:=12
+PKG_RELEASE:=13
 
 PKG_MAINTAINER:=
 PKG_LICENSE:=Apache-2.0
@@ -51,6 +51,9 @@ define Package/luci-theme-round/install
 	$(INSTALL_DATA) ./ucode/template/themes/round/footer.ut $(1)/usr/share/ucode/luci/template/themes/round/footer.ut
 	$(INSTALL_DATA) ./ucode/template/themes/round/sysauth.ut $(1)/usr/share/ucode/luci/template/themes/round/sysauth.ut
 
+	$(INSTALL_DIR) $(1)/usr/share/ucode/luci-round
+	$(INSTALL_DATA) ./root/usr/share/ucode/luci-round/round-cache.uc $(1)/usr/share/ucode/luci-round/round-cache.uc
+
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
 	$(INSTALL_BIN) ./root/etc/uci-defaults/30_luci-theme-round $(1)/etc/uci-defaults/30_luci-theme-round
 
@@ -76,6 +79,13 @@ define Package/luci-theme-round/postrm
 	uci -q delete luci.themes.Round
 	uci -q commit luci
 	rm -f /tmp/luci-indexcache /tmp/luci-modulecache/* 2>/dev/null
+
+	H=/usr/share/ucode/luci-round/round-cache.uc
+	for P in /luci-static/round /luci-static/resources/menu-round.js /luci-static/resources/view/round; do
+		uci -q del_list uhttpd.main.ucode_prefix="$$P=$$H"
+	done
+	uci commit uhttpd
+	/etc/init.d/uhttpd restart >/dev/null 2>&1 || true
 }
 exit 0
 endef

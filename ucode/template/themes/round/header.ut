@@ -12,6 +12,11 @@
 
 	const boardinfo = ubus.call('system', 'board') ?? {};
 
+	// version tag for theme static assets: changes whenever any apk package
+	// operation touches the database (incl. theme upgrades), so long-lived
+	// browser caches are invalidated automatically.
+	const pkgmtime = stat('/lib/apk/db/installed')?.mtime ?? 0;
+
 	http.prepare_content('text/html; charset=UTF-8');
 -%}
 
@@ -39,10 +44,10 @@
 		</script>
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<meta name="darkreader-lock">
-		<link rel="stylesheet" href="{{ media }}/cascade.css">
-		<link rel="stylesheet" href="{{ media }}/mobile.css">
-		<link rel="stylesheet" href="{{ media }}/custom.css">
-		<link rel="icon" href="{{ media }}/logo.svg" sizes="any" type="image/svg+xml">
+		<link rel="stylesheet" href="{{ media }}/cascade.css?v={{ pkgmtime }}">
+		<link rel="stylesheet" href="{{ media }}/mobile.css?v={{ pkgmtime }}">
+		<link rel="stylesheet" href="{{ media }}/custom.css?v={{ pkgmtime }}">
+		<link rel="icon" href="{{ media }}/logo.svg?v={{ pkgmtime }}" sizes="any" type="image/svg+xml">
 		{% if (dispatched?.css): %}
 		<link rel="stylesheet" href="{{ resource }}/{{ dispatched.css }}">
 		{% endif %}
@@ -60,7 +65,7 @@
 				<div class="container">
 					<span class="showSide" title="{{ _('Toggle menu') }}" aria-label="{{ _('Toggle menu') }}"></span>
 					<a id="logo" href="{{ ctx.authsession ? dispatcher.build_url('admin/status/overview') : '#' }}">
-						<img src="{{ media }}/logo.svg" alt="Round">
+						<img src="{{ media }}/logo.svg?v={{ pkgmtime }}" alt="Round">
 					</a>
 					<a class="brand" href="#">{{ striptags(`${boardinfo.hostname ?? '?'}`) }}</a>
 					<span class="status" id="indicators"></span>

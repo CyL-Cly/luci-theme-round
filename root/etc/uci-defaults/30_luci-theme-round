@@ -22,4 +22,23 @@ if [ $changed = 1 ]; then
 	uci commit luci
 fi
 
+# register ucode cache handler for theme static assets (idempotent)
+H=/usr/share/ucode/luci-round/round-cache.uc
+
+add_prefix() {
+	grep -qF "$1=$2" /etc/config/uhttpd 2>/dev/null || {
+		uci -q add_list uhttpd.main.ucode_prefix="$1=$2"
+		changed=1
+	}
+}
+
+add_prefix /luci-static/round "$H"
+add_prefix /luci-static/resources/menu-round.js "$H"
+add_prefix /luci-static/resources/view/round "$H"
+
+if [ $changed = 1 ]; then
+	uci commit uhttpd
+	/etc/init.d/uhttpd restart
+fi
+
 exit 0
