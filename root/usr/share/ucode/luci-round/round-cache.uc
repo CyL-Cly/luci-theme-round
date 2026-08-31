@@ -9,6 +9,11 @@
 //   /luci-static/resources/menu-round.js
 //   /luci-static/resources/view/round
 
+// uhttpd compiles ucode_prefix handlers in template mode, so the whole
+// script must be wrapped in {% %} blocks (like luci's uhttpd.uc) or it
+// is treated as literal output and no handle_request() gets defined.
+{%
+
 'use strict';
 
 import { readfile, realpath, stat } from 'fs';
@@ -127,3 +132,5 @@ global.handle_request = function(env) {
 	if (env.REQUEST_METHOD != 'HEAD')
 		uhttpd.send(data);
 };
+
+%}
