@@ -783,6 +783,16 @@ fieldset:has(.cbi-tooltip-container:hover),
 	z-index: 50;
 }
 
+/* raise the section hosting an expanded dropdown so the absolutely
+   positioned ul.dropdown paints above the next card (same stacking
+   context issue as the tooltips above). */
+.cbi-section:has(.cbi-dropdown[open]),
+fieldset:has(.cbi-dropdown[open]),
+.panel:has(.cbi-dropdown[open]) {
+	position: relative;
+	z-index: 50;
+}
+
 .cbi-map > h2,
 .cbi-map > h3 {
 	margin: 0 0 14px;
@@ -1322,8 +1332,6 @@ body.modal-overlay-active .modal-overlay {
 	box-shadow: var(--modal-shadow);
 	max-width: 680px;
 	width: 90%;
-	max-height: 90vh;
-	overflow: auto;
 	padding: 0;
 }
 
@@ -1626,6 +1634,7 @@ body.modal-overlay-active .modal-overlay {
 	overflow-x: hidden;
 	overflow-y: auto;
 	padding: 6px 0;
+	transition: max-height .125s ease-in;
 	background: var(--bg-panel);
 	color: var(--text);
 	border: 1px solid var(--line);
