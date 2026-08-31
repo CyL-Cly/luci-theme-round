@@ -9,6 +9,7 @@
 
 {%
 	import { getuid, getspnam } from 'luci.core';
+	import { stat } from 'fs';
 
 	const boardinfo = ubus.call('system', 'board') ?? {};
 
