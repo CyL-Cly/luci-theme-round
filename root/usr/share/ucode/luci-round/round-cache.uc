@@ -19,7 +19,6 @@
 import { readfile, realpath, stat } from 'fs';
 
 const CACHE_CONTROL = 'public, max-age=31536000, immutable';
-const S_IFREG = 0x8000;
 
 const MIME_TYPES = {
 	'.css': 'text/css',
@@ -45,8 +44,9 @@ function send_status(code, msg) {
 function http_date(ts) {
 	const t = gmtime(ts);
 
+	// ucode gmtime() returns the full year (e.g. 2026), not a 1900 offset
 	return sprintf('%s, %02d %s %04d %02d:%02d:%02d GMT',
-		WEEKDAYS[t.wday], t.mday, MONTHS[t.mon], t.year + 1900,
+		WEEKDAYS[t.wday], t.mday, MONTHS[t.mon], t.year,
 		t.hour, t.min, t.sec);
 }
 
@@ -57,33 +57,29 @@ global.handle_request = function(env) {
 	}
 
 	const docroot = env.DOCUMENT_ROOT ?? '/www';
-	const path = env.PATH_INFO ?? '';
+	// uhttpd ucode handlers: SCRIPT_NAME is the matched ucode_prefix,
+	// PATH_INFO is the remainder of the URL after that prefix
+	const prefix = env.SCRIPT_NAME ?? '';
+	const rest = env.PATH_INFO ?? '';
 	let phys = null;
 
-	if (path == SINGLE_FILE) {
+	if (prefix == SINGLE_FILE) {
 		phys = `${docroot}${SINGLE_FILE}`;
 	}
 	else {
-		let prefix = null;
+		const dir = ALLOWED[prefix];
 
-		for (let p, dir in ALLOWED) {
-			if (substr(path, 0, length(p)) == p) {
-				prefix = p;
-				phys = `${docroot}/${dir}${substr(path, length(p))}`;
-				break;
-			}
-		}
-
-		if (prefix == null) {
+		if (dir == null) {
 			send_status(404, 'Not Found');
 			return;
 		}
 
-		const real = realpath(phys);
+		phys = `${docroot}${prefix}${rest}`;
 
 		// reject path traversal: resolved path must stay inside the
 		// canonical allowed directory
-		const base = realpath(`${docroot}/${ALLOWED[prefix]}`);
+		const real = realpath(phys);
+		const base = realpath(`${docroot}${prefix}`);
 
 		if (real == null || base == null || substr(real, 0, length(base)) != base) {
 			send_status(404, 'Not Found');
@@ -95,7 +91,9 @@ global.handle_request = function(env) {
 
 	const st = stat(phys);
 
-	if (st == null || (st.st_mode & S_IFREG) == 0) {
+	// ucode fs.stat() exposes "type" ("file"/"dir"/...), mtime, size —
+	// there are no st_mode/st_mtime/st_size fields
+	if (st == null || st.type != 'file') {
 		send_status(404, 'Not Found');
 		return;
 	}
@@ -104,8 +102,8 @@ global.handle_request = function(env) {
 	const ext = replace(phys, /^.*\.([a-z]+)$/, '$1');
 	const ctype = MIME_TYPES[`.${ext}`] ?? 'application/octet-stream';
 
-	const etag = `"${st.st_mtime}-${st.st_size}"`;
-	const lastmod = http_date(st.st_mtime);
+	const etag = `"${st.mtime}-${st.size}"`;
+	const lastmod = http_date(st.mtime);
 
 	// conditional request support: versioned URLs make this redundant for
 	// fresh caches, but plain URLs (old bookmarks, manually referenced
@@ -115,7 +113,7 @@ global.handle_request = function(env) {
 
 	if (inm == etag ||
 	    (inm == null && ifms != null && index(WEEKDAYS, substr(ifms, 0, 3)) != -1 &&
-	     http_date(st.st_mtime) == ifms)) {
+	     http_date(st.mtime) == ifms)) {
 		uhttpd.send(`Status: 304 Not Modified\r\nETag: ${etag}\r\nLast-Modified: ${lastmod}\r\nCache-Control: ${CACHE_CONTROL}\r\n\r\n`);
 		return;
 	}
