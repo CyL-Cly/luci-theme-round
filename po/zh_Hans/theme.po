@@ -1,0 +1,144 @@
+# luci-theme-round simplified Chinese translations.
+msgid ""
+msgstr ""
+"Project-Id-Version: luci-theme-round\n"
+"Language: zh_Hans\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+msgid "All"
+msgstr "全部"
+
+msgid "Authorization Required"
+msgstr "需要授权"
+
+msgid "Clients: %s"
+msgstr "客户端数: %s"
+
+msgid "Collecting data..."
+msgstr "正在收集数据..."
+
+msgid "Connected"
+msgstr "已连接"
+
+msgid "Dark mode"
+msgstr "深色模式"
+
+msgid "Down"
+msgstr "已断开"
+
+msgid "Download"
+msgstr "下载"
+
+msgid "Go to firmware upgrade..."
+msgstr "前往固件升级..."
+
+msgid "Go to password configuration..."
+msgstr "前往密码配置..."
+
+msgid "High load"
+msgstr "高负载"
+
+msgid "Interface"
+msgstr "接口"
+
+msgid "Invalid username and/or password! Please try again."
+msgstr "用户名或密码错误，请重试。"
+
+msgid "JavaScript required!"
+msgstr "需要启用 JavaScript！"
+
+msgid "Leases: %s"
+msgstr "DHCP 租约: %s"
+
+msgid "Light mode"
+msgstr "浅色模式"
+
+msgid "Load"
+msgstr "负载"
+
+msgid "Loading view…"
+msgstr "正在加载视图…"
+
+msgid "Log in"
+msgstr "登录"
+
+msgid "Logging in…"
+msgstr "正在登录…"
+
+msgid "Logout"
+msgstr "登出"
+
+msgid "Lua compatibility mode active"
+msgstr "Lua 兼容模式已启用"
+
+msgid ""
+"No changes to settings will be stored and are lost after rebooting. This "
+"mode should only be used to install a firmware upgrade"
+msgstr ""
+"任何设置更改都不会被保存，且重启后将丢失。此模式仅应用于安装固件升级"
+
+msgid "No password set!"
+msgstr "未设置密码！"
+
+msgid "Normal load"
+msgstr "正常负载"
+
+msgid "On"
+msgstr "开启"
+
+msgid "Overview"
+msgstr "概览"
+
+msgid "Password"
+msgstr "密码"
+
+msgid "Running smoothly"
+msgstr "运行流畅"
+
+msgid "Switch to dark mode"
+msgstr "切换到深色模式"
+
+msgid "Switch to light mode"
+msgstr "切换到浅色模式"
+
+msgid "System running in recovery (initramfs) mode."
+msgstr "系统正在恢复（initramfs）模式中运行。"
+
+msgid ""
+"There is no password set on this router. Please configure a root password "
+"to protect the web interface."
+msgstr ""
+"此路由器尚未设置 root 密码，请配置 root 密码以保护 Web 界面。"
+
+msgid "Toggle light/dark mode"
+msgstr "切换浅色/深色模式"
+
+msgid "Toggle menu"
+msgstr "切换菜单"
+
+msgid "Total received"
+msgstr "累计接收"
+
+msgid "Total sent"
+msgstr "累计发送"
+
+msgid "Traffic"
+msgstr "流量"
+
+msgid "Upload"
+msgstr "上传"
+
+msgid "Username"
+msgstr "用户名"
+
+msgid "Wireless"
+msgstr "无线"
+
+msgid "You must enable JavaScript in your browser or LuCI will not work properly."
+msgstr "必须在浏览器中启用 JavaScript，否则 LuCI 无法正常工作。"
+
+msgid "cores"
+msgstr "核心"

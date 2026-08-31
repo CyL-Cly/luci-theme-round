@@ -1064,6 +1064,7 @@ table,
 
 .table {
 	display: table;
+	position: relative;
 }
 
 .tr { display: table-row; }
@@ -1116,6 +1117,7 @@ tbody tr:hover,
 	bottom: 0;
 	text-align: center;
 	line-height: 3em;
+	pointer-events: none;
 }
 
 .tr.drag-over-above,
@@ -1794,12 +1796,15 @@ body.node-main-login #view {
 	margin-top: 1.6em;
 	border-radius: 999px;
 	background: var(--line);
-	overflow: hidden;
 }
 
+/* keep the pill clipping on the fill, not the container: the ::before
+   label sits above the box and would be cut by overflow:hidden here. */
 .cbi-progressbar > div {
 	height: 100%;
 	background: var(--grad-accent);
+	border-radius: 999px;
+	overflow: hidden;
 }
 
 .cbi-progressbar::before {

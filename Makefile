@@ -2,7 +2,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-theme-round
 PKG_VERSION:=1.0.0
-PKG_RELEASE:=11
+PKG_RELEASE:=12
 
 PKG_MAINTAINER:=
 PKG_LICENSE:=Apache-2.0
@@ -56,6 +56,9 @@ define Package/luci-theme-round/install
 
 	$(INSTALL_DIR) $(1)/usr/share/rpcd/acl.d
 	$(INSTALL_DATA) ./root/usr/share/rpcd/acl.d/luci-theme-round.json $(1)/usr/share/rpcd/acl.d/luci-theme-round.json
+
+	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/i18n
+	$(INSTALL_DATA) ./po/zh_Hans/theme.lmo $(1)/usr/lib/lua/luci/i18n/theme.zh-cn.lmo
 endef
 
 define Package/luci-theme-round/postinst
