@@ -106,7 +106,7 @@ return baseclass.extend({
 		else
 			this.setDesktopCollapsed(this.readDesktopCollapsed());
 
-		window.addEventListener('resize', ui.createHandlerFn(this, 'handleSidebarResize'));
+		window.addEventListener('resize', this.handleSidebarResize.bind(this));
 	},
 
 	handleMenuExpand(ev) {
