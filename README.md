@@ -33,10 +33,10 @@ ImmortalWrt 25.12 / OpenWrt 24+ 的 LuCI 圆角青蓝玻璃主题。ucode + JS�
 
 ### Option 1 — prebuilt package / 直接安装预编译包
 
-Download `luci-theme-round_*.apk` from the latest [GitHub release](https://github.com/CyL-Cly/luci-theme-round/releases), then on the router:
+Download `luci-theme-round-*.apk` from the latest [GitHub release](https://github.com/CyL-Cly/luci-theme-round/releases), copy it to the router, then:
 
 ```sh
-apk add --allow-untrusted luci-theme-round_*.apk
+apk add --allow-untrusted luci-theme-round-*.apk
 ```
 
 (opkg systems: `opkg install luci-theme-round_*.ipk`)
