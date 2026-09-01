@@ -773,21 +773,14 @@ fieldset,
 	margin-bottom: 16px;
 }
 
-/* backdrop-filter creates a stacking context; raise the hovered
-   section so port-status tooltips paint above the next card. */
+/* backdrop-filter creates a stacking context; raise the section so
+   port-status tooltips and expanded dropdowns paint above the next card. */
 .cbi-section:has(.cbi-tooltip-container:hover),
 .cbi-section:has(.ifacebox:hover),
-fieldset:has(.cbi-tooltip-container:hover),
-.panel:has(.cbi-tooltip-container:hover) {
-	position: relative;
-	z-index: 50;
-}
-
-/* raise the section hosting an expanded dropdown so the absolutely
-   positioned ul.dropdown paints above the next card (same stacking
-   context issue as the tooltips above). */
 .cbi-section:has(.cbi-dropdown[open]),
+fieldset:has(.cbi-tooltip-container:hover),
 fieldset:has(.cbi-dropdown[open]),
+.panel:has(.cbi-tooltip-container:hover),
 .panel:has(.cbi-dropdown[open]) {
 	position: relative;
 	z-index: 50;
