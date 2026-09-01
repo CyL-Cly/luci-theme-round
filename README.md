@@ -5,6 +5,8 @@ Pure ucode + JS — no Lua runtime required.
 
 ImmortalWrt 25.12 / OpenWrt 24+ 的 LuCI 圆角青蓝玻璃主题。ucode + JS，不依赖 Lua。
 
+![Status overview in dark mode](preview.jpg)
+
 ## Features / 特性
 
 - Glass 200px sidebar, 14px rounded cards, cyan→electric-teal primary buttons
