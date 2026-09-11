@@ -6,3 +6,16 @@ shimmering-splashing-lollipop.md
 *.ipk
 *.swp
 .DS_Store
+
+# --- common baseline (auto-appended 2026-09-11) ---
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store
+# AI coding tools / IDE
+.codebuddy/
+.claude/
+.cursor/
+.idea/
+.vscode/
+*.iml
