@@ -106,7 +106,7 @@ return baseclass.extend({
 		else
 			this.setDesktopCollapsed(this.readDesktopCollapsed());
 
-		window.addEventListener('resize', this.handleSidebarResize.bind(this));
+		window.addEventListener('resize', ui.createHandlerFn(this, 'handleSidebarResize'));
 	},
 
 	handleMenuExpand(ev) {
@@ -200,9 +200,6 @@ return baseclass.extend({
 
 			if (isActive)
 				this.renderMainMenu(child, child.name);
-
-			if (index > 0 && index < children.length)
-				ul.appendChild(E('li', { 'class': 'divider' }, [E('span')]));
 		});
 
 		if (children.length > 1 && ul.parentElement)

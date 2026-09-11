@@ -3,6 +3,7 @@
 'require rpc';
 'require fs';
 'require network';
+'require poll';
 
 const POLL_MS = 2000;
 const HISTORY = 60;
@@ -61,6 +62,24 @@ function fmtBytes(n) {
 
 function fmtRate(n) {
 	return fmtBytes(n) + '/s';
+}
+
+// 把峰值向上取整到 1/2/2.5/5/10 × 10^k 的“整数刻度”，并设置 1 KB/s 的下限，
+// 避免空闲时的微小抖动被放大成满屏曲线（看起来“很假”）。
+function niceMax(v) {
+	v = Number(v) || 0;
+	if (v <= 1024)
+		return 1024;
+	const exp = Math.floor(Math.log(v) / Math.LN10);
+	const base = Math.pow(10, exp);
+	const frac = v / base;
+	let nice;
+	if (frac <= 1) nice = 1;
+	else if (frac <= 2) nice = 2;
+	else if (frac <= 2.5) nice = 2.5;
+	else if (frac <= 5) nice = 5;
+	else nice = 10;
+	return nice * base;
 }
 
 function clampPct(n) {
@@ -124,8 +143,7 @@ return baseclass.extend({
 		this.dash = this.mount();
 		if (!this.dash)
 			return;
-		this.tick();
-		this.timer = window.setInterval(() => this.tick(), POLL_MS);
+		poll.add(() => this.tick(), Math.max(1, Math.round(POLL_MS / 1000)));
 	},
 
 	mount() {
@@ -198,13 +216,36 @@ return baseclass.extend({
 			});
 		});
 
-		const chart = svg('svg', { viewBox: '0 0 640 220', preserveAspectRatio: 'none', 'class': 'round-dash-svg' }, [
+		const chart = svg('svg', { viewBox: '0 0 640 220', 'class': 'round-dash-svg' }, [
 			svg('g', { 'class': 'grid' }),
+			svg('g', { 'class': 'yaxis' }),
 			svg('path', { 'class': 'fill rx' }),
 			svg('path', { 'class': 'fill tx' }),
 			svg('polyline', { 'class': 'line rx' }),
-			svg('polyline', { 'class': 'line tx' })
+			svg('polyline', { 'class': 'line tx' }),
+			svg('g', { 'class': 'hover', style: 'display:none' }, [
+				svg('line', { 'class': 'cross' }),
+				svg('circle', { 'class': 'dot rx', r: '3.5' }),
+				svg('circle', { 'class': 'dot tx', r: '3.5' })
+			]),
+			svg('rect', { 'class': 'overlay', x: '0', y: '0', width: '100%', height: '100%' })
 		]);
+		const tip = E('div', { 'class': 'round-dash-tip', style: 'display:none' });
+		this.chartEl = chart;
+		this.tipEl = tip;
+		this.parts = {
+			grid: chart.querySelector('g.grid'),
+			yaxis: chart.querySelector('g.yaxis'),
+			lineRx: chart.querySelector('polyline.line.rx'),
+			lineTx: chart.querySelector('polyline.line.tx'),
+			fillRx: chart.querySelector('path.fill.rx'),
+			fillTx: chart.querySelector('path.fill.tx')
+		};
+		this.lastW = 0;
+		this.lastH = 0;
+		this.yLabels = [];
+		chart.addEventListener('pointermove', (ev) => this.onChartHover(ev));
+		chart.addEventListener('pointerleave', () => this.hideHover());
 
 		return E('div', { id: 'round-dashboard' }, [
 			E('div', { 'class': 'round-dash-gauges' }, [
@@ -246,7 +287,7 @@ return baseclass.extend({
 							E('span', { 'class': 'v', 'data-k': 'rxTotal' }, '—')
 						])
 					]),
-					E('div', { 'class': 'round-dash-chart' }, [chart])
+					E('div', { 'class': 'round-dash-chart' }, [chart, tip])
 				])
 			])
 		]);
@@ -304,16 +345,16 @@ return baseclass.extend({
 		return { all, listed };
 	},
 
-		sumStats(devs) {
-			let rx = 0, tx = 0;
-			for (const name in devs) {
-				const d = devs[name] || {};
-				const st = d.statistics || d.stats || {};
-				rx += Number(st.rx_bytes) || 0;
-				tx += Number(st.tx_bytes) || 0;
-			}
-			return { rx, tx };
-		},
+	sumStats(devs) {
+		let rx = 0, tx = 0;
+		for (const name in devs) {
+			const d = devs[name] || {};
+			const st = d.statistics || d.stats || {};
+			rx += Number(st.rx_bytes) || 0;
+			tx += Number(st.tx_bytes) || 0;
+		}
+		return { rx, tx };
+	},
 
 	pickStats(devs, iface) {
 		const counted = this.countable(devs);
@@ -348,52 +389,170 @@ return baseclass.extend({
 		this.setText(this.dash, '[data-k="txTotal"]', fmtBytes(t.txTotal));
 		this.setText(this.dash, '[data-k="rxTotal"]', fmtBytes(t.rxTotal));
 
-		const chart = this.dash.querySelector('.round-dash-svg');
-		if (!chart)
+		const chart = this.chartEl;
+		const host = this.dash.querySelector('.round-dash-chart');
+		const parts = this.parts;
+		if (!chart || !host || !parts)
 			return;
 
-		const w = 640, h = 220, padL = 8, padR = 8, padT = 12, padB = 10;
-		const innerW = w - padL - padR;
-		const innerH = h - padT - padB;
-		const samples = this.history;
-		let max = 1;
-		samples.forEach((s) => {
-			if (s.rx > max) max = s.rx;
-			if (s.tx > max) max = s.tx;
-		});
-		const n = Math.max(samples.length - 1, 1);
-		const pt = (i, v) => (padL + (innerW * i) / n).toFixed(1) + ',' + (padT + innerH * (1 - v / max)).toFixed(1);
-		const y0 = (padT + innerH).toFixed(1);
+		const w = Math.max(host.clientWidth || 0, 320);
+		const h = Math.max(host.clientHeight || 0, 160);
 
-		const grid = chart.querySelector('g.grid');
-		grid.textContent = '';
-		for (let i = 0; i <= 4; i++) {
-			const gy = padT + (innerH * i) / 4;
-			grid.appendChild(svg('line', {
-				x1: String(padL),
-				x2: String(w - padR),
-				y1: String(gy),
-				y2: String(gy)
-			}));
+		const padL = 58, padR = 12, padT = 12, padB = 18;
+		const innerW = Math.max(w - padL - padR, 10);
+		const innerH = Math.max(h - padT - padB, 10);
+		const samples = this.history;
+
+		let peak = 0;
+		samples.forEach((s) => {
+			if (s.rx > peak) peak = s.rx;
+			if (s.tx > peak) peak = s.tx;
+		});
+		const max = niceMax(peak);
+		// 固定时间窗口：每两个采样点的间距恒定，最新点贴在右侧，
+		// 数据不满 HISTORY 时曲线只占右侧部分，如实反映“刚开始采集”。
+		const step = innerW / (HISTORY - 1);
+
+		// 网格线只依赖几何尺寸，仅在容器尺寸变化时重建 DOM；Y 轴刻度文字
+		// 依赖 max，每帧只改文本，避免无谓的节点增删。
+		const DIV = 4;
+		if (w !== this.lastW || h !== this.lastH || this.yLabels.length !== DIV + 1) {
+			// 以容器真实像素尺寸作为 viewBox，保证坐标与像素 1:1，
+			// 不再用 preserveAspectRatio="none" 拉伸导致线宽变形。
+			chart.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
+			parts.grid.textContent = '';
+			parts.yaxis.textContent = '';
+			this.yLabels = [];
+			for (let i = 0; i <= DIV; i++) {
+				const gy = padT + (innerH * i) / DIV;
+				parts.grid.appendChild(svg('line', {
+					x1: String(padL),
+					x2: String(padL + innerW),
+					y1: gy.toFixed(1),
+					y2: gy.toFixed(1)
+				}));
+				const label = svg('text', { x: String(padL - 8), y: (gy + 4).toFixed(1), 'text-anchor': 'end' }, []);
+				parts.yaxis.appendChild(label);
+				this.yLabels.push(label);
+			}
+			this.lastW = w;
+			this.lastH = h;
 		}
+		for (let i = 0; i <= DIV; i++)
+			this.yLabels[i].textContent = fmtRate(max * (1 - i / DIV));
+
+		const count = samples.length;
+		const xAt = (i) => padL + innerW - (count - 1 - i) * step;
+		const yAt = (v) => padT + innerH * (1 - Math.min(v, max) / max);
+		const y0 = padT + innerH;
 
 		function series(key) {
-			if (!samples.length)
+			if (!count)
 				return { line: '', fill: '' };
-			const pts = samples.map((s, i) => pt(i, s[key]));
+			const pts = samples.map((s, i) => xAt(i).toFixed(1) + ',' + yAt(s[key]).toFixed(1));
 			const line = pts.join(' ');
-			const xFirst = pts[0].split(',')[0];
-			const xLast = pts[pts.length - 1].split(',')[0];
-			const fill = 'M' + xFirst + ',' + y0 + ' L' + line.replace(/ /g, ' L') + ' L' + xLast + ',' + y0 + ' Z';
+			let fill = '';
+			if (count > 1)
+				fill = 'M' + xAt(0).toFixed(1) + ',' + y0.toFixed(1) +
+					' L' + pts.join(' L') +
+					' L' + xAt(count - 1).toFixed(1) + ',' + y0.toFixed(1) + ' Z';
 			return { line, fill };
 		}
 
 		const rx = series('rx');
 		const tx = series('tx');
-		chart.querySelector('polyline.line.rx').setAttribute('points', rx.line);
-		chart.querySelector('polyline.line.tx').setAttribute('points', tx.line);
-		chart.querySelector('path.fill.rx').setAttribute('d', rx.fill);
-		chart.querySelector('path.fill.tx').setAttribute('d', tx.fill);
+		parts.lineRx.setAttribute('points', rx.line);
+		parts.lineTx.setAttribute('points', tx.line);
+		parts.fillRx.setAttribute('d', rx.fill);
+		parts.fillTx.setAttribute('d', tx.fill);
+
+		this.geom = { padL, padT, innerW, innerH, step, max, count };
+
+		// 数据滑动后，若鼠标仍停留在图上，按新坐标重新定位十字线/提示框。
+		if (this.hoverClientX != null) {
+			const rect = chart.getBoundingClientRect();
+			this.positionHover(this.hoverClientX - rect.left);
+		} else {
+			this.hideHover();
+		}
+	},
+
+	onChartHover(ev) {
+		const chart = this.chartEl;
+		if (!chart)
+			return;
+		this.hoverClientX = ev.clientX;
+		const rect = chart.getBoundingClientRect();
+		this.positionHover(ev.clientX - rect.left);
+	},
+
+	positionHover(localX) {
+		const chart = this.chartEl;
+		const tip = this.tipEl;
+		const g = this.geom;
+		if (!chart || !tip || !g || !g.count) {
+			this.hideHover();
+			return;
+		}
+		const samples = this.history;
+		const { padL, padT, innerW, innerH, step, max, count } = g;
+
+		let i;
+		if (count === 1)
+			i = 0;
+		else
+			i = Math.round(count - 1 - (padL + innerW - localX) / step);
+		i = Math.max(0, Math.min(count - 1, i));
+
+		const s = samples[i] || { rx: 0, tx: 0, t: Date.now() };
+		const xi = padL + innerW - (count - 1 - i) * step;
+		const yRx = padT + innerH * (1 - Math.min(s.rx, max) / max);
+		const yTx = padT + innerH * (1 - Math.min(s.tx, max) / max);
+
+		const hover = chart.querySelector('g.hover');
+		hover.style.display = '';
+		const cross = hover.querySelector('line.cross');
+		cross.setAttribute('x1', xi.toFixed(1));
+		cross.setAttribute('x2', xi.toFixed(1));
+		cross.setAttribute('y1', String(padT));
+		cross.setAttribute('y2', (padT + innerH).toFixed(1));
+		const dotRx = hover.querySelector('circle.dot.rx');
+		dotRx.setAttribute('cx', xi.toFixed(1));
+		dotRx.setAttribute('cy', yRx.toFixed(1));
+		const dotTx = hover.querySelector('circle.dot.tx');
+		dotTx.setAttribute('cx', xi.toFixed(1));
+		dotTx.setAttribute('cy', yTx.toFixed(1));
+
+		tip.style.display = '';
+		tip.textContent = '';
+		tip.appendChild(E('div', { 'class': 'tip-t' }, new Date(s.t || Date.now()).toLocaleTimeString()));
+		tip.appendChild(E('div', { 'class': 'tip-row rx' }, [
+			E('span', { 'class': 'dot' }), _('Download') + ': ' + fmtRate(s.rx)
+		]));
+		tip.appendChild(E('div', { 'class': 'tip-row tx' }, [
+			E('span', { 'class': 'dot' }), _('Upload') + ': ' + fmtRate(s.tx)
+		]));
+
+		const cw = chart.clientWidth || (padL + innerW + 12);
+		const tw = tip.offsetWidth || 150;
+		let left = xi + 14;
+		if (left + tw > cw - 4)
+			left = xi - tw - 14;
+		if (left < 4)
+			left = 4;
+		tip.style.left = left.toFixed(0) + 'px';
+		tip.style.top = (padT + 6) + 'px';
+	},
+
+	hideHover() {
+		this.hoverClientX = null;
+		const chart = this.chartEl || (this.dash && this.dash.querySelector('.round-dash-svg'));
+		const tip = this.tipEl || (this.dash && this.dash.querySelector('.round-dash-tip'));
+		const hover = chart && chart.querySelector('g.hover');
+		if (hover)
+			hover.style.display = 'none';
+		if (tip)
+			tip.style.display = 'none';
 	},
 
 	async readCpu() {
@@ -539,21 +698,16 @@ return baseclass.extend({
 		}
 	},
 
-	async tick() {
-		if (this.busy)
-			return;
-		this.busy = true;
-		try {
-			await this.refresh();
-		} catch (e) {
-			console.error('round-dashboard', e);
-		} finally {
-			this.busy = false;
-		}
+	tick() {
+		return this.refresh().catch((e) => console.error('round-dashboard', e));
 	},
 
 	async refresh() {
 		const now = Date.now();
+		// network 模块默认命中缓存，WAN/LAN/WiFi 状态不会自行刷新；每帧先
+		// flushCache，否则概览数据首屏后冻结（对齐官方 status/index.js）。
+		if (network && typeof network.flushCache === 'function')
+			await L.resolveDefault(network.flushCache(), null);
 		const wanP = (network && typeof network.getWANNetworks === 'function')
 			? network.getWANNetworks()
 			: [];
@@ -617,7 +771,7 @@ return baseclass.extend({
 		}
 		this.prevNet = { rx: stats.rx, tx: stats.tx };
 		this.prevAt = now;
-		this.history.push({ rx: rxRate, tx: txRate });
+		this.history.push({ t: now, rx: rxRate, tx: txRate });
 		if (this.history.length > HISTORY)
 			this.history.shift();
 

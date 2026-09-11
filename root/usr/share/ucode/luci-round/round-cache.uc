@@ -81,7 +81,8 @@ global.handle_request = function(env) {
 		const real = realpath(phys);
 		const base = realpath(`${docroot}${prefix}`);
 
-		if (real == null || base == null || substr(real, 0, length(base)) != base) {
+		if (real == null || base == null ||
+		    (real != base && substr(real, 0, length(base) + 1) != base + '/')) {
 			send_status(404, 'Not Found');
 			return;
 		}

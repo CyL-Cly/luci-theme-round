@@ -680,10 +680,6 @@ footer a {
 	text-decoration: none;
 }
 
-#modemenu .divider {
-	display: none;
-}
-
 /* ---------- Tabs ---------- */
 #tabmenu,
 .cbi-tabmenu {
@@ -1825,8 +1821,7 @@ body.node-main-login #view {
 .hidden { display: none !important; }
 .left { text-align: left; }
 .right { text-align: right; }
-.center, .text-center { text-align: center; }
-.pull-right { margin-left: auto; }
+.center { text-align: center; }
 
 div.cbi-value var,
 .td.cbi-value-field var {
@@ -1995,14 +1990,6 @@ div.cbi-value var.cbi-tooltip-container .cbi-tooltip,
 
 .cbi-dropdown[open] {
 	border-color: var(--input-focus-border);
-}
-
-.breadcrumb {
-	list-style: none;
-	display: flex;
-	gap: 8px;
-	padding: 0;
-	margin: 0;
 }
 
 #view h2 {
@@ -2361,6 +2348,7 @@ body.node-status-overview #maincontent > .container {
 .round-dash-stat.rx .k { color: #f59f00; }
 
 .round-dash-chart {
+	position: relative;
 	height: 220px;
 }
 
@@ -2393,6 +2381,70 @@ body.node-status-overview #maincontent > .container {
 
 .round-dash-svg path.fill.tx { fill: var(--ok); }
 .round-dash-svg path.fill.rx { fill: #f59f00; }
+
+.round-dash-svg g.yaxis text {
+	fill: var(--text-muted);
+	font-size: 11px;
+	font-variant-numeric: tabular-nums;
+}
+
+.round-dash-svg rect.overlay {
+	fill: transparent;
+	cursor: crosshair;
+}
+
+.round-dash-svg g.hover line.cross {
+	stroke: var(--text-muted);
+	stroke-width: 1;
+	stroke-dasharray: 3 3;
+	opacity: 0.75;
+}
+
+.round-dash-svg g.hover circle.dot {
+	stroke: #fff;
+	stroke-width: 1.5;
+}
+
+.round-dash-svg g.hover circle.dot.tx { fill: var(--ok); }
+.round-dash-svg g.hover circle.dot.rx { fill: #f59f00; }
+
+.round-dash-tip {
+	position: absolute;
+	z-index: 5;
+	min-width: 132px;
+	padding: 8px 10px;
+	border-radius: var(--radius-sm);
+	background: rgba(0, 0, 0, 0.82);
+	color: #fff;
+	font-size: 12px;
+	line-height: 1.6;
+	white-space: nowrap;
+	pointer-events: none;
+	box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+}
+
+.round-dash-tip .tip-t {
+	margin-bottom: 4px;
+	opacity: 0.72;
+	font-variant-numeric: tabular-nums;
+}
+
+.round-dash-tip .tip-row {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	font-variant-numeric: tabular-nums;
+}
+
+.round-dash-tip .tip-row .dot {
+	display: inline-block;
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+}
+
+.round-dash-tip .tip-row.rx .dot { background: #f59f00; }
+.round-dash-tip .tip-row.tx .dot { background: var(--ok); }
 
 @media (max-width: 1100px) {
 	.round-dash-body {
