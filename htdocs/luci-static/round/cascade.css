@@ -1099,6 +1099,11 @@ tbody tr:hover,
 	border-radius: var(--radius-sm);
 }
 
+/* overflow-x: auto forces the other axis to auto; let the menu escape. */
+.table-wrapper:has(.cbi-dropdown[open]) {
+	overflow: visible;
+}
+
 .tr.table-titles,
 .tr.cbi-section-table-titles {
 	background: var(--th-grad);
@@ -1603,6 +1608,7 @@ body.modal-overlay-active .modal-overlay {
 }
 
 .cbi-dropdown[open] {
+	position: relative;
 	border-color: var(--input-focus-border);
 }
 
@@ -1610,13 +1616,11 @@ body.modal-overlay-active .modal-overlay {
 	display: flex !important;
 }
 
+/* no top/left/bottom/margin — ui.js openDropdown() sets top or bottom */
 .cbi-dropdown[open] > ul.dropdown {
 	display: block;
 	position: absolute;
 	z-index: 1100;
-	left: 0;
-	top: 100%;
-	margin-top: 4px;
 	min-width: 100%;
 	width: auto;
 	max-width: none;
@@ -1986,10 +1990,6 @@ div.cbi-value var.cbi-tooltip-container .cbi-tooltip,
 
 .network-status-table .ifacebox:hover {
 	z-index: 1000;
-}
-
-.cbi-dropdown[open] {
-	border-color: var(--input-focus-border);
 }
 
 #view h2 {
