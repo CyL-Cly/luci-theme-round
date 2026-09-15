@@ -29,6 +29,10 @@ EXCLUDE_FILES = {
     ".DS_Store",
 }
 
+# Remote shell commands are assembled via f-strings; reject arguments with
+# characters that could break quoting (spaces, quotes, shell metachars).
+SAFE_ARG_RE = re.compile(r"[A-Za-z0-9_@.:/+-]+")
+
 
 def log(msg: str):
     print(f"[*] {msg}")
@@ -204,6 +208,17 @@ def main():
 
     args = parser.parse_args()
     repo_dir = Path(__file__).resolve().parent
+
+    for label, value in (
+        ("build server", args.build_server),
+        ("router", args.router),
+        ("sdk dir", args.sdk_dir),
+    ):
+        if not SAFE_ARG_RE.fullmatch(value):
+            error(
+                f"Invalid {label} {value!r}: only [A-Za-z0-9_@.:/+-] "
+                "characters are allowed"
+            )
 
     if args.bump:
         bump_release(repo_dir)

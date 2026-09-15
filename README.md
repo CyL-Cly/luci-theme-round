@@ -24,7 +24,8 @@ ImmortalWrt 25.12 / OpenWrt 24+ 的 LuCI 圆角青蓝玻璃主题。ucode + JS�
 - zh-Hans translations included
   内置简体中文翻译
 - Static assets served with long-lived `Cache-Control` via a ucode uhttpd handler
-  静态资源通过 ucode handler 设置长期缓存
+  (cache-busting version tracks both apk and opkg databases)
+  静态资源通过 ucode handler 设置长期缓存（缓存版本号同时跟踪 apk 与 opkg 数据库）
 
 ## Requirements
 

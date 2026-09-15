@@ -67,7 +67,15 @@ function bindThemeToggle() {
 return baseclass.extend({
 	__init__() {
 		bindThemeToggle();
-		ui.menu.load().then((tree) => this.render(tree));
+		ui.menu.load().then((tree) => this.render(tree)).catch((e) => {
+			console.warn('menu load failed:', e);
+			const loading = document.querySelector('.main > .loading');
+			if (loading) {
+				loading.style.opacity = '0';
+				loading.style.visibility = 'hidden';
+			}
+			ui.addNotification(null, E('p', _('Menu failed to load. Please refresh the page to retry.')), 'error');
+		});
 		if (document.body.getAttribute('data-page') === 'admin-status-overview')
 			L.require('view.round.dashboard');
 	},
@@ -106,7 +114,10 @@ return baseclass.extend({
 		else
 			this.setDesktopCollapsed(this.readDesktopCollapsed());
 
-		window.addEventListener('resize', ui.createHandlerFn(this, 'handleSidebarResize'));
+		window.addEventListener('resize', () => {
+			clearTimeout(this._resizeTimer);
+			this._resizeTimer = setTimeout(() => this.handleSidebarResize(), 100);
+		});
 	},
 
 	handleMenuExpand(ev) {

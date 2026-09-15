@@ -5,7 +5,9 @@
 'require network';
 'require poll';
 
-const POLL_MS = 2000;
+// poll.add() takes seconds; 5s matches the interval used by official
+// dashboard/status pages and keeps 60 samples covering ~5 minutes.
+const POLL_SECS = 5;
 const HISTORY = 60;
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const RING_R = 52;
@@ -143,7 +145,7 @@ return baseclass.extend({
 		this.dash = this.mount();
 		if (!this.dash)
 			return;
-		poll.add(() => this.tick(), Math.max(1, Math.round(POLL_MS / 1000)));
+		poll.add(() => this.tick(), POLL_SECS);
 	},
 
 	mount() {

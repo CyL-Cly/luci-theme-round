@@ -13,10 +13,14 @@
 
 	const boardinfo = ubus.call('system', 'board') ?? {};
 
-	// version tag for theme static assets: changes whenever any apk package
-	// operation touches the database (incl. theme upgrades), so long-lived
-	// browser caches are invalidated automatically.
-	const pkgmtime = stat('/lib/apk/db/installed')?.mtime ?? 0;
+	// version tag for theme static assets: changes whenever any package
+	// operation touches the package manager database (incl. theme upgrades),
+	// so long-lived browser caches are invalidated automatically. Check both
+	// apk and opkg databases since either may be absent depending on the
+	// system; use the newest mtime found.
+	const apk_mtime = stat('/lib/apk/db/installed')?.mtime ?? 0;
+	const opkg_mtime = stat('/usr/lib/opkg/status')?.mtime ?? 0;
+	const pkgmtime = apk_mtime > opkg_mtime ? apk_mtime : opkg_mtime;
 
 	http.prepare_content('text/html; charset=UTF-8');
 -%}
