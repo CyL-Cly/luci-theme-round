@@ -21,6 +21,10 @@ EXCLUDE_DIRS = {
     "__pycache__",
     ".vscode",
     ".idea",
+    # upstream LuCI source kept only as a local reference; bundling it into
+    # the SDK makes the build compile its packages (rpcd-mod-luci needs
+    # libnl-tiny headers this SDK does not ship).
+    "luci-openwrt-25.12",
 }
 
 EXCLUDE_FILES = {
