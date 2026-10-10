@@ -1333,6 +1333,17 @@ body.modal-overlay-active .modal-overlay {
 	padding: 16px 22px;
 }
 
+/* The fill is a percentage-width child of this 10px track: under the global
+   border-box sizing the modal's blanket child padding collapses the track's
+   content box to 0 and the fill renders 0px tall (bar looks stuck at 0%).
+   Only the padding is dropped - the 1.6em top margin keeps room for the
+   ::before percentage label above the bar. */
+.modal > .cbi-progressbar {
+	padding: 0;
+	margin-right: 22px;
+	margin-left: 22px;
+}
+
 .modal > h4:first-child,
 .modal > .modal-title {
 	margin: 0;
@@ -1807,6 +1818,7 @@ body.node-main-login #view {
 	background: var(--grad-accent);
 	border-radius: 999px;
 	overflow: hidden;
+	transition: width .25s ease-in;
 }
 
 .cbi-progressbar::before {
