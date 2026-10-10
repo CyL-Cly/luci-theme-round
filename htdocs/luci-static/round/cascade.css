@@ -744,6 +744,25 @@ footer a {
 	transition: opacity .25s ease-in;
 }
 
+/* Error-count badge on inactive tabs. ui.js writes data-errors on the <li>;
+   attr() does not inherit, so the selector stays on the li while the ::after
+   moves onto the <a> that holds the label (round's li is not a flex box). */
+.cbi-tabmenu > li.cbi-tab-disabled[data-errors] > a::after {
+	content: attr(data-errors);
+	background: #c43c35;
+	color: #fff;
+	height: 16px;
+	min-width: 16px;
+	border-radius: 8px;
+	text-align: center;
+	margin: 0 0 0 6px;
+	padding: 3px 2px 1px 2px;
+	display: inline-flex;
+	flex-direction: column;
+	justify-content: center;
+	font-size: 12px;
+}
+
 .cbi-section-node-tabbed {
 	padding: 0;
 	border: 0;
@@ -1342,6 +1361,15 @@ body.modal-overlay-active .modal-overlay {
 	padding: 0;
 	margin-right: 22px;
 	margin-left: 22px;
+}
+
+/* Long single lines in a modal's <pre> (backup stdout, key listings) scroll
+   horizontally; wrap them instead. round's global pre already sets
+   overflow: auto, so only white-space is needed here. */
+.modal > pre,
+.modal > textarea {
+	white-space: pre-wrap;
+	width: 100%;
 }
 
 .modal > h4:first-child,

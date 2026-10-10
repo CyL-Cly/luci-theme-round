@@ -44,9 +44,10 @@ function send_status(code, msg) {
 function http_date(ts) {
 	const t = gmtime(ts);
 
-	// ucode gmtime() returns the full year (e.g. 2026), not a 1900 offset
+	// ucode gmtime() returns the full year (e.g. 2026), not a 1900 offset,
+	// and a 1-based month (1-12), so index the 0-based MONTHS with mon - 1
 	return sprintf('%s, %02d %s %04d %02d:%02d:%02d GMT',
-		WEEKDAYS[t.wday], t.mday, MONTHS[t.mon], t.year,
+		WEEKDAYS[t.wday], t.mday, MONTHS[t.mon - 1], t.year,
 		t.hour, t.min, t.sec);
 }
 
